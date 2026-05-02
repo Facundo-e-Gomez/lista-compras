@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Mi Lista" />
+  <meta name="description" content="Lista de compras del supermercado" />
+  <title>Mi Lista de Compras</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff;
+      --bg2: #f5f5f3;
+      --bg3: #eeede9;
+      --text: #1a1a18;
+      --text2: #6b6b67;
+      --text3: #a0a09b;
+      --border: rgba(0,0,0,0.10);
+      --border2: rgba(0,0,0,0.18);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --green: #1D9E75;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a;
+        --bg2: #252523;
+        --bg3: #2e2e2b;
+        --text: #f0efe9;
+        --text2: #a0a09b;
+        --text3: #6b6b67;
+        --border: rgba(255,255,255,0.10);
+        --border2: rgba(255,255,255,0.18);
+      }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    #app { max-width: 480px; margin: 0 auto; padding: 0 0 6rem; }
+    header { padding: 1.5rem 1.1rem 0.5rem; }
+    header h1 { font-size: 26px; font-weight: 600; }
+    header p { font-size: 13px; color: var(--text2); margin-top: 2px; }
+    .stats { display: flex; gap: 8px; padding: 1rem 1.1rem; }
+    .stat { flex: 1; background: var(--bg2); border-radius: var(--radius-sm); padding: 0.65rem 0.8rem; }
+    .stat-num { font-size: 22px; font-weight: 600; }
+    .stat-lbl { font-size: 11px; color: var(--text2); margin-top: 1px; }
+    .input-area { padding: 0 1.1rem 0.75rem; display: flex; flex-direction: column; gap: 8px; }
+    .input-row { display: flex; gap: 8px; }
+    .input-area input {
+      flex: 1; height: 44px; border-radius: var(--radius-sm);
+      border: 0.5px solid var(--border2);
+      background: var(--bg); color: var(--text);
+      padding: 0 14px; font-size: 16px;
+      font-family: inherit; outline: none;
+      -webkit-appearance: none;
+    }
+    .input-area input:focus { border-color: var(--green); box-shadow: 0 0 0 2px rgba(29,158,117,0.15); }
+    .qty-input { height: 38px !important; font-size: 14px !important; }
+    .qty-label { font-size: 13px; color: var(--text2); align-self: center; white-space: nowrap; }
+    .qty-row { display: flex; gap: 8px; align-items: center; }
+    .add-btn {
+      height: 44px; width: 44px; flex-shrink: 0;
+      border-radius: var(--radius-sm);
+      border: 0.5px solid var(--border2);
+      background: var(--green); color: white;
+      font-size: 24px; line-height: 1;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s;
+    }
+    .add-btn:active { opacity: 0.75; }
+    .section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--text3);
+      padding: 0.25rem 1.1rem 0.4rem;
+    }
+    .list { padding: 0 1.1rem; display: flex; flex-direction: column; gap: 6px; }
+    .item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg); border: 0.5px solid var(--border);
+      border-radius: var(--radius); padding: 0.8rem 0.9rem;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.2s, background 0.2s;
+      animation: slideIn 0.18s ease;
+    }
+    @keyframes slideIn { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: none; } }
+    .item.done { opacity: 0.45; background: var(--bg2); border-color: transparent; }
+    .item:active { transform: scale(0.98); }
+    .check {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      border: 1.5px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .item.done .check { background: var(--green); border-color: var(--green); }
+    .check svg { display: none; }
+    .item.done .check svg { display: block; }
+    .item-text { flex: 1; font-size: 16px; }
+    .item.done .item-text { text-decoration: line-through; color: var(--text3); }
+    .qty-badge {
+      font-size: 12px; color: var(--text2);
+      background: var(--bg2); border-radius: 99px;
+      padding: 2px 9px; flex-shrink: 0;
+    }
+    .del-btn {
+      width: 30px; height: 30px; border-radius: 50%;
+      border: none; background: transparent; color: var(--text3);
+      font-size: 18px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0; transition: background 0.15s, color 0.15s;
+    }
+    .del-btn:active { background: #fee2e2; color: #b91c1c; }
+    .divider { height: 0.5px; background: var(--border); margin: 0.75rem 1.1rem; }
+    .empty { text-align: center; color: var(--text3); font-size: 14px; padding: 2.5rem 1rem; }
+    .clear-btn {
+      display: block; margin: 1rem auto 0;
+      padding: 8px 22px; border-radius: var(--radius-sm);
+      border: 0.5px solid var(--border2);
+      background: transparent; color: var(--text2);
+      font-size: 13px; cursor: pointer; font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .clear-btn:active { background: var(--bg2); }
+    .progress-bar { height: 3px; background: var(--bg3); margin: 0 1.1rem 0.5rem; border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--green); border-radius: 99px; transition: width 0.3s ease; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🛒 Mi Lista</h1>
+    <p>Tocá un producto para marcarlo</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="total-n">0</div><div class="stat-lbl">total</div></div>
+    <div class="stat"><div class="stat-num" id="done-n">0</div><div class="stat-lbl">comprados</div></div>
+    <div class="stat"><div class="stat-num" id="pend-n">0</div><div class="stat-lbl">pendientes</div></div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-row">
+      <input id="item-inp" type="text" placeholder="Agregar producto..." maxlength="60" autocomplete="off" />
+      <button class="add-btn" id="add-btn">+</button>
+    </div>
+    <div class="qty-row">
+      <span class="qty-label">Cantidad:</span>
+      <input id="qty-inp" class="qty-input" type="text" placeholder="ej: 2 kg, 1 docena..." maxlength="30" autocomplete="off" />
+    </div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+  <div id="pend-section">
+    <div class="section-label" id="pend-label"></div>
+    <div class="list" id="pend-list"></div>
+  </div>
+
+  <div id="done-section" style="display:none">
+    <div class="divider"></div>
+    <div class="section-label">Ya comprado</div>
+    <div class="list" id="done-list"></div>
+    <button class="clear-btn" id="clear-btn">Limpiar comprados</button>
+  </div>
+</div>
+
+<script>
+const SAMPLE = [
+  {id:1, text:'Leche', qty:'1 litro', done:false},
+  {id:2, text:'Pan', qty:'1 bolsa', done:false},
+  {id:3, text:'Huevos', qty:'6 unidades', done:false},
+];
+let items = JSON.parse(localStorage.getItem('lista') || 'null') || SAMPLE;
+let nid = Math.max(0, ...items.map(i=>i.id)) + 1;
+
+const save = () => { try { localStorage.setItem('lista', JSON.stringify(items)); } catch(e){} };
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function itemHTML(it) {
+  return `<div class="item${it.done?' done':''}" onclick="toggle(${it.id})">
+    <div class="check">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M2.5 6.5l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="item-text">${esc(it.text)}</span>
+    ${it.qty ? `<span class="qty-badge">${esc(it.qty)}</span>` : ''}
+    <button class="del-btn" onclick="event.stopPropagation();del(${it.id})">×</button>
+  </div>`;
+}
+
+function render() {
+  const pend = items.filter(i=>!i.done);
+  const done = items.filter(i=>i.done);
+  document.getElementById('total-n').textContent = items.length;
+  document.getElementById('done-n').textContent = done.length;
+  document.getElementById('pend-n').textContent = pend.length;
+  const pct = items.length ? Math.round(done.length/items.length*100) : 0;
+  document.getElementById('progress').style.width = pct + '%';
+  document.getElementById('pend-label').textContent = pend.length ? 'Para comprar' : '';
+  document.getElementById('pend-list').innerHTML = pend.length
+    ? pend.map(itemHTML).join('')
+    : '<div class="empty">¡Todo comprado! 🎉</div>';
+  const ds = document.getElementById('done-section');
+  ds.style.display = done.length ? 'block' : 'none';
+  document.getElementById('done-list').innerHTML = done.map(itemHTML).join('');
+}
+
+function toggle(id) { items = items.map(i=>i.id===id?{...i,done:!i.done}:i); save(); render(); }
+function del(id) { items = items.filter(i=>i.id!==id); save(); render(); }
+
+function addItem() {
+  const inp = document.getElementById('item-inp');
+  const qty = document.getElementById('qty-inp');
+  const text = inp.value.trim();
+  if (!text) { inp.focus(); return; }
+  items.unshift({ id: nid++, text, qty: qty.value.trim(), done: false });
+  inp.value = ''; qty.value = ''; inp.focus();
+  save(); render();
+}
+
+document.getElementById('add-btn').onclick = addItem;
+document.getElementById('item-inp').addEventListener('keydown', e => { if(e.key==='Enter') addItem(); });
+document.getElementById('clear-btn').onclick = () => { items = items.filter(i=>!i.done); save(); render(); };
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+render();
+</script>
+</body>
+</html>
